@@ -1,0 +1,319 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Disease Classification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+        .container {
+            border: 2px solid #333;
+            padding: 30px;
+            width: 400px;
+            text-align: center;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+        h2 {
+            margin: 0 0 20px;
+            font-size: 20px;
+        }
+        #upload-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+        }
+        #progress-bar {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 20px;
+            height: 20px;
+            display: none;
+        }
+        #progress {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            border-radius: 5px;
+            text-align: center;
+            color: white;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #333;
+        }
+        #image-preview {
+            margin-top: 20px;
+            max-width: 100%;
+            max-height: 200px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Plant Diseases Classification using Vision Transformer</h2>
+        <form id="upload-form" method="POST" action="{{ url_for('predict') }}" enctype="multipart/form-data">
+            <input type="file" id="upload-btn" name="file" accept="image/*" required>
+            <button type="submit" id="submit-btn">Upload Image</button>
+        </form>
+        <div id="progress-bar">
+            <div id="progress">0%</div>
+        </div>
+        <img id="image-preview" alt="Image Preview" />
+        <div id="result">
+            {% if label %}
+                 {{ label }}
+            {% else %}
+                After successful upload, a class label will be displayed here.
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        const uploadForm = document.getElementById('upload-form');
+        const progressBar = document.getElementById('progress-bar');
+        const progress = document.getElementById('progress');
+        const uploadInput = document.getElementById('upload-btn');
+        const imagePreview = document.getElementById('image-preview');
+
+        // Display image preview when a file is selected
+        uploadInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    imagePreview.src = event.target.result;
+                    imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        uploadForm.addEventListener('submit', (e) => {
+            progressBar.style.display = 'block';
+            let progressValue = 0;
+            const progressInterval = setInterval(() => {
+                if (progressValue >= 100) {
+                    clearInterval(progressInterval);
+                } else {
+                    progressValue += 10;
+                    progress.style.width = progressValue + '%';
+                    progress.textContent = progressValue + '%';
+                }
+            }, 300);
+        });
+    </script>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaf Disease Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        .upload-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .drag-drop {
+            width: 100%;
+            height: 150px;
+            border: 2px dashed #4CAF50;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            color: #4CAF50;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        #fileInput {
+            display: none;
+        }
+        #imagePreview {
+            max-width: 100%;
+            max-height: 150px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        #submitBtn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #submitBtn:hover {
+            background-color: #45a049;
+        }
+        #results {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #333;
+        }
+        /* Loader styles */
+        .lds-roller {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin-top: 15px;
+            display: none;
+        }
+        .lds-roller div {
+            animation: lds-roller 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            transform-origin: 40px 40px;
+        }
+        .lds-roller div:after {
+            content: " ";
+            display: block;
+            position: absolute;
+            width: 7.2px;
+            height: 7.2px;
+            border-radius: 50%;
+            background: #4CAF50;
+            margin: -3.6px 0 0 -3.6px;
+        }
+        .lds-roller div:nth-child(1) { animation-delay: -0.036s; }
+        .lds-roller div:nth-child(1):after { top: 62.62742px; left: 62.62742px; }
+        .lds-roller div:nth-child(2) { animation-delay: -0.072s; }
+        .lds-roller div:nth-child(2):after { top: 67.71281px; left: 56px; }
+        .lds-roller div:nth-child(3) { animation-delay: -0.108s; }
+        .lds-roller div:nth-child(3):after { top: 70.90963px; left: 48.28221px; }
+        .lds-roller div:nth-child(4) { animation-delay: -0.144s; }
+        .lds-roller div:nth-child(4):after { top: 72px; left: 40px; }
+        .lds-roller div:nth-child(5) { animation-delay: -0.18s; }
+        .lds-roller div:nth-child(5):after { top: 70.90963px; left: 31.71779px; }
+        .lds-roller div:nth-child(6) { animation-delay: -0.216s; }
+        .lds-roller div:nth-child(6):after { top: 67.71281px; left: 24px; }
+        .lds-roller div:nth-child(7) { animation-delay: -0.252s; }
+        .lds-roller div:nth-child(7):after { top: 62.62742px; left: 17.37258px; }
+        .lds-roller div:nth-child(8) { animation-delay: -0.288s; }
+        .lds-roller div:nth-child(8):after { top: 56px; left: 12.28719px; }
+        @keyframes lds-roller {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Wheat Leaf Disease Detection using Vision Transformer</h1>
+    <div class="upload-container">
+        <div class="drag-drop" onclick="document.getElementById('fileInput').click()">
+            Drag and drop an image here or click to upload
+        </div>
+        <input id="fileInput" type="file" accept="image/*" onchange="handleFile(this.files)">
+        <img id="imagePreview" src="#" alt="Image Preview">
+        <button id="submitBtn" onclick="submitImage()" disabled>Predict</button>
+        <div class="lds-roller" id="loader">
+            <div></div><div></div><div></div><div></div>
+            <div></div><div></div><div></div><div></div>
+        </div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+
+        function handleFile(files) {
+            selectedFile = files[0];
+            if (selectedFile) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById("imagePreview").src = e.target.result;
+                    document.getElementById("imagePreview").style.display = "block";
+                };
+                reader.readAsDataURL(selectedFile);
+                document.getElementById("submitBtn").disabled = false;
+            }
+        }
+
+        async function submitImage() {
+            if (!selectedFile) return;
+
+            const formData = new FormData();
+            formData.append("file", selectedFile);
+
+            document.getElementById("loader").style.display = "inline-block";
+            document.getElementById("submitBtn").disabled = true;
+            document.getElementById("results").innerHTML = "";
+
+            try {
+                const response = await fetch("/predict", {
+                    method: "POST",
+                    body: formData
+                });
+                const result = await response.json();
+                
+                document.getElementById("loader").style.display = "none";
+                document.getElementById("submitBtn").disabled = false;
+
+                if (response.ok) {
+                    document.getElementById("results").innerHTML = `
+                        <strong>Prediction:</strong> ${result.predicted_class}<br>
+                        <strong>Confidence:</strong> ${result.confidence_percentage}%<br>
+                        <strong>Class Probabilities:</strong> ${JSON.stringify(result.class_probabilities)}
+                    `;
+                } else {
+                    document.getElementById("results").innerHTML = `<strong>Error:</strong> ${result.error}`;
+                }
+            } catch (error) {
+                document.getElementById("loader").style.display = "none";
+                document.getElementById("results").innerHTML = `<strong>Error:</strong> ${error.message}`;
+            }
+        }
+
+        const dragDropArea = document.querySelector(".drag-drop");
+        dragDropArea.addEventListener("dragover", (e) => e.preventDefault());
+        dragDropArea.addEventListener("drop", (e) => {
+            e.preventDefault();
+            handleFile(e.dataTransfer.files);
+        });
+    </script>
+</body>
+</html>
